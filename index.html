@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>FC Draft Arena Live</title>
+  <style>
+    :root{
+      --bg:#07100b;--panel:#0f1d14;--panel2:#13271b;--line:#294634;
+      --text:#f4fff7;--muted:#9fb4a5;--accent:#72ff98;--accent2:#e3ff58;
+      --danger:#ff6f75;--warn:#ffc857;--blue:#7db8ff;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,Arial,sans-serif;color:var(--text);
+      background:radial-gradient(circle at 10% 0,#173a25 0,transparent 30%),
+      radial-gradient(circle at 95% 10%,#123328 0,transparent 26%),var(--bg)}
+    button,input,select{font:inherit}
+    button{cursor:pointer}
+    header{position:sticky;top:0;z-index:40;background:rgba(7,16,11,.94);
+      backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+    .wrap{max-width:1320px;margin:auto;padding:0 18px}
+    .head{display:flex;gap:16px;justify-content:space-between;align-items:center;padding:14px 0}
+    .brand{display:flex;gap:12px;align-items:center}.logo{width:44px;height:44px;border-radius:14px;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;
+      color:#06100a;font-weight:1000}
+    .brand h1{margin:0;font-size:19px}.brand small{display:block;color:var(--muted);margin-top:2px}
+    nav{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+    nav button{padding:9px 11px;border-radius:10px;border:1px solid var(--line);background:#102117;color:var(--text)}
+    nav button.active{border-color:var(--accent);color:var(--accent)}
+    .hero{padding:27px 0 12px}.hero h2{font-size:clamp(34px,5vw,58px);line-height:.98;margin:0 0 12px}
+    .hero p{color:var(--muted);max-width:880px}.pillrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+    .pill{padding:7px 10px;border:1px solid var(--line);border-radius:999px;background:#0c1911;color:#cae0d0;font-size:13px}
+    .page{display:none;padding:14px 0 42px}.page.active{display:block}.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+    .card{grid-column:span 12;background:linear-gradient(180deg,rgba(19,38,27,.98),rgba(9,21,14,.98));
+      border:1px solid var(--line);border-radius:19px;padding:18px;box-shadow:0 20px 55px rgba(0,0,0,.18)}
+    @media(min-width:920px){.half{grid-column:span 6}.third{grid-column:span 4}.two{grid-column:span 8}}
+    h3{margin:0 0 6px}.sub{color:var(--muted);font-size:14px}.row{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+    .field{display:flex;flex-direction:column;gap:6px;min-width:150px;flex:1}.field label{font-size:12px;color:var(--muted)}
+    input,select{background:#09160e;border:1px solid var(--line);color:var(--text);padding:11px;border-radius:11px;outline:none}
+    input:focus,select:focus{border-color:var(--accent)}
+    .btn{border:0;border-radius:11px;padding:11px 15px;font-weight:900;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#06100a}
+    .btn.secondary{background:#13241a;color:var(--text);border:1px solid var(--line)}.btn.danger{background:var(--danger);color:white}
+    .btn.blue{background:var(--blue);color:#07101c}.btn:disabled{opacity:.42;cursor:not-allowed}
+    .notice{background:#0d1b13;border-left:3px solid var(--accent2);padding:12px 14px;border-radius:9px;color:#dcebe0}
+    .status{padding:9px 11px;border:1px solid var(--line);background:#0a1810;border-radius:11px;font-size:13px}
+    .ok{color:var(--accent)}.warn{color:var(--warn)}.err{color:var(--danger)}
+    .wheelWrap{display:flex;justify-content:center;padding:16px}.wheel{position:relative;width:min(430px,86vw);aspect-ratio:1}
+    .pointer{position:absolute;z-index:5;left:50%;top:-3px;transform:translateX(-50%);width:0;height:0;border-left:18px solid transparent;border-right:18px solid transparent;border-bottom:34px solid var(--accent2)}
+    canvas{width:100%;height:100%;filter:drop-shadow(0 16px 30px rgba(0,0,0,.4))}
+    .result{min-height:38px;text-align:center;font-size:28px;font-weight:1000;color:var(--accent2);margin:4px 0 13px}
+    .teamcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px}
+    .teamcard{background:#0b1911;border:1px solid var(--line);border-radius:14px;padding:14px}.teamcard h4{margin:0 0 4px}
+    .code{display:inline-grid;place-items:center;width:27px;height:27px;border-radius:8px;background:#173a25;color:var(--accent);font-weight:1000;margin-right:7px}
+    .tiny{font-size:12px;color:var(--muted)}.chips{display:flex;flex-wrap:wrap;gap:8px}
+    .chip{padding:7px 9px;border-radius:999px;background:#0b1911;border:1px solid var(--line);font-size:12px}.chip.used{opacity:.42;text-decoration:line-through}
+    .slot{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid #203529;font-size:13px}.slot span:last-child{text-align:right;color:#bed0c2}
+    .login{max-width:530px;margin:20px auto}.hidden{display:none!important}.draftBanner{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
+    .draftBanner div{background:#0a1810;border:1px solid var(--line);border-radius:12px;padding:12px;flex:1;min-width:180px}
+    .draftBanner strong{display:block;font-size:20px;margin-top:3px}
+    .statgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:15px}@media(min-width:760px){.statgrid{grid-template-columns:repeat(4,1fr)}}
+    .stat{background:#0a1810;border:1px solid var(--line);border-radius:14px;padding:14px}.stat strong{font-size:28px;display:block}.stat small{color:var(--muted)}
+    .table{overflow:auto;border:1px solid var(--line);border-radius:14px;margin-top:14px}table{width:100%;border-collapse:collapse;min-width:760px}
+    th,td{padding:10px 12px;border-bottom:1px solid #21372a;text-align:left}th{background:#102117;color:#bcd4c2}
+    .footer{text-align:center;color:#6f8576;font-size:12px;padding:20px 0 40px}
+    #connectionBanner{margin-top:12px}
+  </style>
+</head>
+<body>
+<header><div class="wrap head">
+  <div class="brand"><div class="logo">FC</div><div><h1>FC Draft Arena Live</h1><small>Supabase-powered multi-device tournament system</small></div></div>
+  <nav>
+    <button class="active" data-page="live">Live Draft</button>
+    <button data-page="teamlogin">Team Login</button>
+    <button data-page="adminlogin">Master Admin</button>
+  </nav>
+</div></header>
+
+<div class="wrap">
+  <div id="connectionBanner" class="notice">Connecting to tournament database…</div>
+
+  <section class="hero">
+    <h2>One live draft. <span style="color:var(--accent)">Every device synced.</span></h2>
+    <p>Teams can join from separate phones or laptops while the organizers control the draw from the Master Admin screen. Team names are mapped to A/B/C… internally, while the public wheel shows the real team names.</p>
+    <div class="pillrow"><div class="pill">2–10 teams</div><div class="pill">Live shared database</div><div class="pill">Team PIN login</div><div class="pill">Master admin</div><div class="pill">11-position squads</div></div>
+  </section>
+
+  <section id="live" class="page active">
+    <div class="grid">
+      <div class="card half">
+        <h3>Live Team Wheel</h3><div class="sub">The public screen shows the actual team names. Only the Master Admin can commit a team draw.</div>
+        <div class="wheelWrap"><div class="wheel"><div class="pointer"></div><canvas id="teamCanvas" width="640" height="640"></canvas></div></div>
+        <div id="teamPublicResult" class="result"></div>
+      </div>
+      <div class="card half">
+        <h3>Live Position Wheel</h3><div class="sub">GK, RB, LB, CB1, CB2, MDF1, MDF2, MDF3, RW, LW and ST.</div>
+        <div class="wheelWrap"><div class="wheel"><div class="pointer"></div><canvas id="posCanvas" width="640" height="640"></canvas></div></div>
+        <div id="posPublicResult" class="result"></div>
+      </div>
+      <div class="card">
+        <h3>Current Draft Turn</h3>
+        <div class="draftBanner">
+          <div><span class="tiny">Selected Team</span><strong id="liveTeam">Not selected</strong></div>
+          <div><span class="tiny">Required Position</span><strong id="livePosition">Not selected</strong></div>
+        </div>
+        <div class="sub">Team mappings</div>
+        <div id="publicTeams" class="teamcards"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="teamlogin" class="page">
+    <div id="teamLoginCard" class="card login">
+      <h3>Team Login</h3><div class="sub">Log in using the PIN provided by the organizers.</div>
+      <div class="field" style="margin-top:14px"><label>Team</label><select id="teamSelect"></select></div>
+      <div class="field" style="margin-top:10px"><label>PIN</label><input id="teamPin" type="password" placeholder="Enter team PIN"></div>
+      <button class="btn" style="margin-top:14px;width:100%" onclick="teamLogin()">Login</button>
+      <div id="teamLoginMsg" style="margin-top:10px"></div>
+    </div>
+
+    <div id="teamPortal" class="hidden">
+      <div class="grid">
+        <div class="card half">
+          <div class="row" style="justify-content:space-between;align-items:center">
+            <div><h3 id="portalTeamName"></h3><div class="sub">Submit your player when your team has an active position.</div></div>
+            <button class="btn secondary" onclick="teamLogout()">Logout</button>
+          </div>
+          <div class="draftBanner">
+            <div><span class="tiny">Team Code</span><strong id="portalCode">—</strong></div>
+            <div><span class="tiny">Required Position</span><strong id="portalPosition">Waiting</strong></div>
+          </div>
+          <div class="field"><label>Player Name</label><input id="playerName" placeholder="e.g. Kylian Mbappé"></div>
+          <div class="field" style="margin-top:10px"><label>Country</label><input id="playerCountry" placeholder="e.g. France"></div>
+          <button class="btn" id="submitPickBtn" style="margin-top:14px;width:100%" onclick="submitPick()">Submit Player</button>
+          <div id="submitMsg" style="margin-top:10px"></div>
+        </div>
+        <div class="card half">
+          <h3>My 11-Player Squad</h3><div class="sub"><span id="myCount">0</span>/11 positions filled</div>
+          <div id="mySquad" class="teamcard" style="margin-top:14px"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="adminlogin" class="page">
+    <div id="adminLoginCard" class="card login">
+      <h3>Master Admin Login</h3><div class="sub">Organizer-only access.</div>
+      <div class="field" style="margin-top:14px"><label>Username</label><input id="adminUser" value="admin"></div>
+      <div class="field" style="margin-top:10px"><label>Password</label><input id="adminPass" type="password" placeholder="Enter admin password"></div>
+      <button class="btn" style="margin-top:14px;width:100%" onclick="adminLogin()">Login</button>
+      <div id="adminLoginMsg" style="margin-top:10px"></div>
+      <div class="notice" style="margin-top:14px">First login after database setup: <b>admin / fcadmin</b>. Change it immediately.</div>
+    </div>
+
+    <div id="adminPortal" class="hidden">
+      <div class="grid">
+        <div class="card">
+          <div class="row" style="justify-content:space-between;align-items:center">
+            <div><h3>Master Admin Dashboard</h3><div class="sub">This controls the shared live tournament.</div></div>
+            <button class="btn secondary" onclick="adminLogout()">Logout</button>
+          </div>
+          <div class="statgrid">
+            <div class="stat"><strong id="statTeams">0</strong><small>Teams</small></div>
+            <div class="stat"><strong id="statPicks">0</strong><small>Players Submitted</small></div>
+            <div class="stat"><strong id="statComplete">0</strong><small>Completed Squads</small></div>
+            <div class="stat"><strong id="statActive">—</strong><small>Active Team / Position</small></div>
+          </div>
+        </div>
+
+        <div class="card two">
+          <h3>Tournament Setup</h3>
+          <div class="sub">Create 2–10 teams. They are automatically assigned A, B, C… in the order entered.</div>
+          <div class="row" style="margin-top:14px">
+            <div class="field"><label>Number of Teams</label><select id="teamCount"></select></div>
+            <button class="btn secondary" onclick="buildTeamInputs()">Create Team Fields</button>
+          </div>
+          <div id="teamInputs" style="margin-top:14px"></div>
+          <button class="btn" style="margin-top:14px" onclick="saveTournamentSetup()">Save / Replace Tournament Teams</button>
+          <div id="setupMsg" style="margin-top:10px"></div>
+        </div>
+
+        <div class="card third">
+          <h3>Organizer Draw Controls</h3>
+          <button class="btn" style="width:100%;margin-top:10px" onclick="adminSpinTeam()">Spin & Select Team</button>
+          <button class="btn" style="width:100%;margin-top:10px" onclick="adminSpinPosition()">Spin & Select Position</button>
+          <button class="btn secondary" style="width:100%;margin-top:10px" onclick="resetTeamWheel()">Reset Team Wheel</button>
+          <button class="btn secondary" style="width:100%;margin-top:10px" onclick="clearActiveDraw()">Clear Active Draw</button>
+          <button class="btn secondary" style="width:100%;margin-top:10px" onclick="undoLastPick()">Undo Last Pick</button>
+        </div>
+
+        <div class="card two">
+          <h3>All Teams & Squads</h3>
+          <div id="adminTeams" class="teamcards"></div>
+        </div>
+
+        <div class="card third">
+          <h3>Admin Settings</h3>
+          <div class="field"><label>New Username</label><input id="newAdminUser"></div>
+          <div class="field" style="margin-top:10px"><label>New Password</label><input id="newAdminPass" type="password"></div>
+          <button class="btn blue" style="width:100%;margin-top:12px" onclick="changeAdminLogin()">Change Admin Login</button>
+          <div id="adminSettingsMsg" style="margin-top:10px"></div>
+        </div>
+
+        <div class="card">
+          <h3>Submission History</h3>
+          <div class="table"><table><thead><tr><th>#</th><th>Team</th><th>Position</th><th>Player</th><th>Country</th><th>Time</th></tr></thead><tbody id="historyBody"></tbody></table></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">FC Draft Arena Live • GitHub Pages + Supabase</div>
+</div>
+
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
+
+const POSITIONS=['GK','RB','LB','CB1','CB2','MDF1','MDF2','MDF3','RW','LW','ST'];
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let publicState={configured:false,teams:[],current_team_id:null,current_position:null,team_wheel_used:[]};
+let teamToken=localStorage.getItem('fc_team_token')||null;
+let adminToken=localStorage.getItem('fc_admin_token')||null;
+let teamState=null, adminState=null;
+
+window.teamLogin=teamLogin; window.teamLogout=teamLogout; window.submitPick=submitPick;
+window.adminLogin=adminLogin; window.adminLogout=adminLogout; window.buildTeamInputs=buildTeamInputs;
+window.saveTournamentSetup=saveTournamentSetup; window.adminSpinTeam=adminSpinTeam; window.adminSpinPosition=adminSpinPosition;
+window.resetTeamWheel=resetTeamWheel; window.clearActiveDraw=clearActiveDraw; window.undoLastPick=undoLastPick;
+window.changeAdminLogin=changeAdminLogin;
+
+function msg(id,html){document.getElementById(id).innerHTML=html}
+function setupNav(){
+  document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+    document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); document.getElementById(b.dataset.page).classList.add('active');
+  });
+}
+function initTeamCount(){
+  let el=document.getElementById('teamCount'); el.innerHTML='';
+  for(let i=2;i<=10;i++){let o=document.createElement('option');o.value=i;o.textContent=i+' Teams';el.appendChild(o)}
+  el.value=publicState.teams.length>=2?publicState.teams.length:2;
+}
+function codeLetter(i){return String.fromCharCode(65+i)}
+function color(i,n){let hue=(115+i*300/n)%360;return `hsl(${hue} 58% 34%)`}
+function drawWheel(canvasId,items,labelFn=x=>x){
+  let c=document.getElementById(canvasId),ctx=c.getContext('2d'),w=c.width,cx=w/2,cy=w/2,r=w*.455;ctx.clearRect(0,0,w,w);
+  if(!items.length){ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fillStyle='#163021';ctx.fill();ctx.fillStyle='#a7baa9';ctx.font='24px sans-serif';ctx.textAlign='center';ctx.fillText('No entries',cx,cy);return}
+  let a=Math.PI*2/items.length;
+  items.forEach((it,i)=>{let st=i*a-Math.PI/2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,st,st+a);ctx.closePath();ctx.fillStyle=color(i,items.length);ctx.fill();ctx.strokeStyle='#07100b';ctx.lineWidth=3;ctx.stroke();ctx.save();ctx.translate(cx,cy);ctx.rotate(st+a/2);ctx.textAlign='right';ctx.fillStyle='white';ctx.font='bold 19px sans-serif';let t=String(labelFn(it));if(t.length>18)t=t.slice(0,16)+'…';ctx.fillText(t,r-22,7);ctx.restore()});
+  ctx.beginPath();ctx.arc(cx,cy,62,0,Math.PI*2);ctx.fillStyle='#07100b';ctx.fill();ctx.strokeStyle='#72ff98';ctx.lineWidth=6;ctx.stroke();ctx.fillStyle='#72ff98';ctx.font='900 20px sans-serif';ctx.textAlign='center';ctx.fillText('DRAFT',cx,cy+7);
+}
+function drawRotated(canvasId,items,labelFn,rot){
+  let c=document.getElementById(canvasId),ctx=c.getContext('2d'),w=c.width,cx=w/2,cy=w/2,r=w*.455;ctx.clearRect(0,0,w,w);let a=Math.PI*2/items.length;
+  items.forEach((it,i)=>{let st=rot+i*a-Math.PI/2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,st,st+a);ctx.closePath();ctx.fillStyle=color(i,items.length);ctx.fill();ctx.strokeStyle='#07100b';ctx.lineWidth=3;ctx.stroke();ctx.save();ctx.translate(cx,cy);ctx.rotate(st+a/2);ctx.textAlign='right';ctx.fillStyle='white';ctx.font='bold 19px sans-serif';let t=String(labelFn(it));if(t.length>18)t=t.slice(0,16)+'…';ctx.fillText(t,r-22,7);ctx.restore()});
+  ctx.beginPath();ctx.arc(cx,cy,62,0,Math.PI*2);ctx.fillStyle='#07100b';ctx.fill();ctx.strokeStyle='#72ff98';ctx.lineWidth=6;ctx.stroke();ctx.fillStyle='#72ff98';ctx.font='900 20px sans-serif';ctx.textAlign='center';ctx.fillText('DRAFT',cx,cy+7);
+}
+function animate(canvasId,items,labelFn,done){
+  if(!items.length)return;let start=null,dur=2400,offset=(7+Math.random()*4)*Math.PI*2;
+  function frame(ts){if(!start)start=ts;let t=Math.min(1,(ts-start)/dur),e=1-Math.pow(1-t,4);drawRotated(canvasId,items,labelFn,offset*e);if(t<1)requestAnimationFrame(frame);else done()}
+  requestAnimationFrame(frame);
+}
+async function rpc(name,args={}){
+  const {data,error}=await supabase.rpc(name,args); if(error) throw error; return data;
+}
+async function refreshPublic(){
+  try{
+    publicState=await rpc('get_public_state');
+    document.getElementById('connectionBanner').innerHTML='<span class="ok">● Connected</span> — live database is online.';
+    renderPublic();
+  }catch(e){
+    document.getElementById('connectionBanner').innerHTML='<span class="err">Database connection failed.</span> Check config.js and whether database.sql has been run in Supabase.';
+    console.error(e);
+  }
+}
+function renderPublic(){
+  initTeamCount();
+  let used=publicState.team_wheel_used||[], avail=(publicState.teams||[]).filter(t=>!used.includes(t.id));
+  drawWheel('teamCanvas',avail,t=>t.name);
+  let active=(publicState.teams||[]).find(t=>t.id===publicState.current_team_id);
+  let activePicks=active?.positions||[];
+  drawWheel('posCanvas',POSITIONS.filter(p=>!activePicks.includes(p)),x=>x);
+  document.getElementById('teamPublicResult').textContent=active?'🎯 '+active.name+' ('+active.code+')':'';
+  document.getElementById('posPublicResult').textContent=publicState.current_position?'⚽ '+publicState.current_position:'';
+  document.getElementById('liveTeam').textContent=active?active.name+' ('+active.code+')':'Not selected';
+  document.getElementById('livePosition').textContent=publicState.current_position||'Not selected';
+  document.getElementById('publicTeams').innerHTML=(publicState.teams||[]).map(t=>`<div class="teamcard"><h4><span class="code">${t.code}</span>${escapeHtml(t.name)}</h4><div class="tiny">${t.pick_count}/11 positions filled</div></div>`).join('')||'<div class="sub">No teams configured yet.</div>';
+  document.getElementById('teamSelect').innerHTML=(publicState.teams||[]).map(t=>`<option value="${t.id}">${escapeHtml(t.name)} (${t.code})</option>`).join('');
+}
+function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+
+async function teamLogin(){
+  try{
+    const token=await rpc('team_login',{p_team_id:document.getElementById('teamSelect').value,p_pin:document.getElementById('teamPin').value});
+    teamToken=token;localStorage.setItem('fc_team_token',token);document.getElementById('teamLoginCard').classList.add('hidden');document.getElementById('teamPortal').classList.remove('hidden');msg('teamLoginMsg','');await refreshTeamState();
+  }catch(e){msg('teamLoginMsg','<span class="err">Login failed. Check your team and PIN.</span>')}
+}
+function teamLogout(){teamToken=null;localStorage.removeItem('fc_team_token');document.getElementById('teamPortal').classList.add('hidden');document.getElementById('teamLoginCard').classList.remove('hidden');document.getElementById('teamPin').value=''}
+async function refreshTeamState(){
+  if(!teamToken)return;
+  try{teamState=await rpc('get_team_state',{p_token:teamToken});renderTeamPortal()}
+  catch(e){teamLogout()}
+}
+function renderTeamPortal(){
+  if(!teamState)return;document.getElementById('portalTeamName').textContent=teamState.name;document.getElementById('portalCode').textContent=teamState.code;
+  document.getElementById('portalPosition').textContent=teamState.active_position||'Waiting';document.getElementById('submitPickBtn').disabled=!teamState.active_position;
+  document.getElementById('myCount').textContent=teamState.picks.length;
+  document.getElementById('mySquad').innerHTML=POSITIONS.map(p=>{let x=teamState.picks.find(y=>y.position===p);return `<div class="slot"><b>${p}</b><span>${x?escapeHtml(x.player)+' • '+escapeHtml(x.country):'—'}</span></div>`}).join('');
+}
+async function submitPick(){
+  try{
+    await rpc('submit_pick',{p_token:teamToken,p_player:document.getElementById('playerName').value.trim(),p_country:document.getElementById('playerCountry').value.trim()});
+    document.getElementById('playerName').value='';document.getElementById('playerCountry').value='';msg('submitMsg','<span class="ok">Player submitted successfully.</span>');await Promise.all([refreshPublic(),refreshTeamState()]);
+  }catch(e){msg('submitMsg','<span class="err">'+escapeHtml(e.message)+'</span>')}
+}
+
+async function adminLogin(){
+  try{
+    const token=await rpc('admin_login',{p_user:document.getElementById('adminUser').value,p_password:document.getElementById('adminPass').value});
+    adminToken=token;localStorage.setItem('fc_admin_token',token);document.getElementById('adminLoginCard').classList.add('hidden');document.getElementById('adminPortal').classList.remove('hidden');msg('adminLoginMsg','');await refreshAdminState();buildTeamInputs();
+  }catch(e){msg('adminLoginMsg','<span class="err">Incorrect admin login.</span>')}
+}
+function adminLogout(){adminToken=null;localStorage.removeItem('fc_admin_token');document.getElementById('adminPortal').classList.add('hidden');document.getElementById('adminLoginCard').classList.remove('hidden');document.getElementById('adminPass').value=''}
+async function refreshAdminState(){
+  if(!adminToken)return;
+  try{adminState=await rpc('get_admin_state',{p_token:adminToken});renderAdmin()}
+  catch(e){adminLogout()}
+}
+function renderAdmin(){
+  let teams=adminState.teams||[],picks=adminState.picks||[],active=teams.find(t=>t.id===adminState.current_team_id);
+  document.getElementById('statTeams').textContent=teams.length;document.getElementById('statPicks').textContent=picks.length;document.getElementById('statComplete').textContent=teams.filter(t=>t.pick_count===11).length;document.getElementById('statActive').textContent=active?(active.code+' / '+(adminState.current_position||'—')):'—';
+  document.getElementById('adminTeams').innerHTML=teams.map(t=>`<div class="teamcard"><h4><span class="code">${t.code}</span>${escapeHtml(t.name)}</h4><div class="tiny">${t.pick_count}/11 players</div>${POSITIONS.map(p=>{let x=picks.find(y=>y.team_id===t.id&&y.position===p);return `<div class="slot"><b>${p}</b><span>${x?escapeHtml(x.player)+' • '+escapeHtml(x.country):'—'}</span></div>`}).join('')}</div>`).join('');
+  document.getElementById('historyBody').innerHTML=picks.slice().reverse().map((x,i)=>{let t=teams.find(z=>z.id===x.team_id);return `<tr><td>${picks.length-i}</td><td>${escapeHtml(t?.name||'Unknown')}</td><td>${x.position}</td><td>${escapeHtml(x.player)}</td><td>${escapeHtml(x.country)}</td><td>${new Date(x.created_at).toLocaleString()}</td></tr>`}).join('');
+  document.getElementById('newAdminUser').value=adminState.admin_user||'admin';
+}
+function buildTeamInputs(){
+  let n=+document.getElementById('teamCount').value,existing=adminState?.teams||[];
+  document.getElementById('teamInputs').innerHTML=Array.from({length:n},(_,i)=>`<div class="row" style="margin-top:8px">
+    <div class="field" style="max-width:90px"><label>Code</label><input disabled value="${codeLetter(i)}"></div>
+    <div class="field"><label>Team Name</label><input id="setupName${i}" value="${escapeHtml(existing[i]?.name||'')}" placeholder="Team ${codeLetter(i)} name"></div>
+    <div class="field"><label>Team PIN</label><input id="setupPin${i}" placeholder="Set PIN"></div>
+  </div>`).join('');
+}
+async function saveTournamentSetup(){
+  let n=+document.getElementById('teamCount').value,teams=[];
+  for(let i=0;i<n;i++){let name=document.getElementById('setupName'+i).value.trim(),pin=document.getElementById('setupPin'+i).value.trim();if(!name||!pin){msg('setupMsg','<span class="err">Enter every team name and PIN.</span>');return}teams.push({name,pin})}
+  try{await rpc('configure_tournament',{p_token:adminToken,p_teams:teams});msg('setupMsg','<span class="ok">Tournament teams saved.</span>');await Promise.all([refreshPublic(),refreshAdminState()]);}
+  catch(e){msg('setupMsg','<span class="err">'+escapeHtml(e.message)+'</span>')}
+}
+async function adminSpinTeam(){
+  let used=publicState.team_wheel_used||[],avail=(publicState.teams||[]).filter(t=>!used.includes(t.id));
+  if(!avail.length){alert('All teams have been used in this wheel cycle. Reset the team wheel first.');return}
+  animate('teamCanvas',avail,t=>t.name,async()=>{let pick=avail[Math.floor(Math.random()*avail.length)];try{await rpc('set_active_team',{p_token:adminToken,p_team_id:pick.id});await Promise.all([refreshPublic(),refreshAdminState(),refreshTeamState()]);}catch(e){alert(e.message)}});
+}
+async function adminSpinPosition(){
+  let active=(publicState.teams||[]).find(t=>t.id===publicState.current_team_id);if(!active){alert('Select a team first.');return}
+  let avail=POSITIONS.filter(p=>!(active.positions||[]).includes(p));if(!avail.length){alert('This team has completed all 11 positions.');return}
+  animate('posCanvas',avail,x=>x,async()=>{let pos=avail[Math.floor(Math.random()*avail.length)];try{await rpc('set_active_position',{p_token:adminToken,p_position:pos});await Promise.all([refreshPublic(),refreshAdminState(),refreshTeamState()]);}catch(e){alert(e.message)}});
+}
+async function resetTeamWheel(){try{await rpc('reset_team_wheel',{p_token:adminToken});await Promise.all([refreshPublic(),refreshAdminState(),refreshTeamState()])}catch(e){alert(e.message)}}
+async function clearActiveDraw(){try{await rpc('clear_active_draw',{p_token:adminToken});await Promise.all([refreshPublic(),refreshAdminState(),refreshTeamState()])}catch(e){alert(e.message)}}
+async function undoLastPick(){try{await rpc('undo_last_pick',{p_token:adminToken});await Promise.all([refreshPublic(),refreshAdminState(),refreshTeamState()])}catch(e){alert(e.message)}}
+async function changeAdminLogin(){
+  let u=document.getElementById('newAdminUser').value.trim(),p=document.getElementById('newAdminPass').value.trim();if(!u||!p){msg('adminSettingsMsg','<span class="err">Enter both fields.</span>');return}
+  try{await rpc('change_admin_login',{p_token:adminToken,p_new_user:u,p_new_password:p});msg('adminSettingsMsg','<span class="ok">Admin login changed. Please log in again.</span>');setTimeout(adminLogout,800)}
+  catch(e){msg('adminSettingsMsg','<span class="err">'+escapeHtml(e.message)+'</span>')}
+}
+
+function subscribe(){
+  supabase.channel('fc-live')
+    .on('postgres_changes',{event:'*',schema:'public',table:'teams'},()=>refreshPublic())
+    .on('postgres_changes',{event:'*',schema:'public',table:'picks'},()=>{refreshPublic();refreshTeamState();refreshAdminState()})
+    .on('postgres_changes',{event:'*',schema:'public',table:'app_settings'},()=>{refreshPublic();refreshTeamState();refreshAdminState()})
+    .subscribe();
+}
+setupNav();initTeamCount();await refreshPublic();subscribe();
+if(teamToken){try{document.getElementById('teamLoginCard').classList.add('hidden');document.getElementById('teamPortal').classList.remove('hidden');await refreshTeamState()}catch{}}
+if(adminToken){try{document.getElementById('adminLoginCard').classList.add('hidden');document.getElementById('adminPortal').classList.remove('hidden');await refreshAdminState();buildTeamInputs()}catch{}}
+setInterval(()=>{refreshPublic();refreshTeamState();refreshAdminState()},8000);
+</script>
+</body>
+</html>
